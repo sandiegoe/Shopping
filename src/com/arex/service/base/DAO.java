@@ -23,6 +23,20 @@ public interface DAO {
 	public <T> void delete(Class<T> entityClass, Object[] entityids);
 	
 	/**
+	 * 删除实体（设置实体中的visible为false）
+	 * @param entityClass
+	 * @param entityid
+	 */
+	public <T> void deleteBySetVisible(Class<T> entityClass, Object entityid);
+	
+	/**
+	 * 删除实体（设置实体中的visible为false）
+	 * @param entityClass
+	 * @param entityids
+	 */
+	public <T> void deleteBySetVisible(Class<T> entityClass, Object[] entityids);
+	
+	/**
 	 * 更新实体
 	 * @param entity 实体
 	 */

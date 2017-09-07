@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +32,36 @@ public abstract class DAOSupport implements DAO {
 			this.delete(entityClass, entityid);
 		}
 	}
+	
+	@Override
+	public <T> void deleteBySetVisible(Class<T> entityClass, Object entityid) {
+		this.deleteBySetVisible(entityClass, new Object[]{entityid});
+	}
 
+	@Override
+	public <T> void deleteBySetVisible(Class<T> entityClass, Object[] entityids) {
+		
+		String className = entityClass.getSimpleName();
+		
+		String idName = className.toLowerCase() + "id";
+		
+		//prepare in condition
+		StringBuffer buffer = new StringBuffer();
+		for (Object entityid : entityids) {
+			buffer.append("?").append(",");
+		}
+		buffer.deleteCharAt(buffer.length()-1);
+		String inCondition = buffer.toString();
+		
+		Query query = em.createQuery("update " + className + " o set o.visible = ? where o." + idName + " in (" + inCondition + ")")
+			.setParameter(0, false);
+		for (int i=0; i<entityids.length; ++i) {
+			query.setParameter(i+1, entityids[i]);
+		}
+		
+		query.executeUpdate();
+	}
+	
 	@Override
 	public void update(Object entity) {
 		em.merge(entity);

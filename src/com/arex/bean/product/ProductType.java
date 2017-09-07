@@ -22,7 +22,7 @@ import org.hibernate.annotations.Type;
 public class ProductType implements Serializable {
 
 	private static final long serialVersionUID = 8902554013247969269L;
-	private Integer typeid;
+	private Integer producttypeid;
 	private String name;
 	private String note;
 	private Boolean visible = true;
@@ -80,19 +80,19 @@ public class ProductType implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	public Integer getTypeid() {
-		return typeid;
+	public Integer getProducttypeid() {
+		return producttypeid;
 	}
 
-	public void setTypeid(Integer typeid) {
-		this.typeid = typeid;
+	public void setProducttypeid(Integer producttypeid) {
+		this.producttypeid = producttypeid;
 	}
 	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((typeid == null) ? 0 : typeid.hashCode());
+		result = prime * result + ((producttypeid == null) ? 0 : producttypeid.hashCode());
 		return result;
 	}
 
@@ -105,12 +105,17 @@ public class ProductType implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		ProductType other = (ProductType) obj;
-		if (typeid == null) {
-			if (other.typeid != null)
+		if (producttypeid == null) {
+			if (other.producttypeid != null)
 				return false;
-		} else if (!typeid.equals(other.typeid))
+		} else if (!producttypeid.equals(other.producttypeid))
 			return false;
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "ProductType [typeid=" + producttypeid + ", name=" + name + ", note="
+				+ note + ", visible=" + visible + "]";
+	}
 }
