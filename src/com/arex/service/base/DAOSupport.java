@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
@@ -44,9 +45,9 @@ public abstract class DAOSupport implements DAO {
 	@Override
 	public <T> void deleteBySetVisible(Class<T> entityClass, Object[] entityids) {
 		
-		String className = entityClass.getSimpleName();
+		String entityClassName = this.getEntityClassName(entityClass);
 		
-		String idName = className.toLowerCase() + "id";
+		String idName = entityClassName.toLowerCase() + "id";
 		
 		//prepare in condition
 		StringBuffer buffer = new StringBuffer();
@@ -56,7 +57,7 @@ public abstract class DAOSupport implements DAO {
 		buffer.deleteCharAt(buffer.length()-1);
 		String inCondition = buffer.toString();
 		
-		Query query = em.createQuery("update " + className + " o set o.visible = ? where o." + idName + " in (" + inCondition + ")")
+		Query query = em.createQuery("update " + entityClassName + " o set o.visible = ? where o." + idName + " in (" + inCondition + ")")
 			.setParameter(0, false);
 		for (int i=0; i<entityids.length; ++i) {
 			query.setParameter(i+1, entityids[i]);
@@ -114,7 +115,7 @@ public abstract class DAOSupport implements DAO {
 	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults, String hqlWhere, Object[] params, LinkedHashMap<String, String> orderby) {
 		
 		PageInfo<T> pageInfo = new PageInfo<T>();
-		String entityClassName = entityClass.getSimpleName();
+		String entityClassName = getEntityClassName(entityClass);
 		String orderStr = getOrderBy(orderby);
 		
 		Query query = em.createQuery("select o from " + entityClassName + " o " + (hqlWhere==null?"":hqlWhere) + orderStr);
@@ -128,6 +129,16 @@ public abstract class DAOSupport implements DAO {
 		pageInfo.setTotalResults((long)query.getSingleResult());
 		
 		return pageInfo;
+	}
+	
+	protected <T> String getEntityClassName(Class<T> entityClass) {
+		String entityClassName = entityClass.getSimpleName();
+		Entity entity = entityClass.getAnnotation(Entity.class);
+		if (entity.name() !=null && !"".equals(entity.name())) {
+			entityClassName = entity.name();
+		}
+		
+		return entityClassName;
 	}
 	
 	protected void setQueryWhereParams(Query query, Object[] params) {
