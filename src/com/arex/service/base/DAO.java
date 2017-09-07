@@ -1,6 +1,9 @@
 package com.arex.service.base;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+
+import com.arex.bean.PageInfo;
 
 public interface DAO {
 
@@ -57,4 +60,53 @@ public interface DAO {
 	 * @return
 	 */
 	public <T> List<T> find(Class<T> entityClass, Object[] entityids);
+	
+	/**
+	 * 分页查询实体
+	 * @param entityClass 实体类
+	 * @param firstResult 第一条记录
+	 * @param maxResults 一页显示的记录数
+	 * @param hqlWhere 筛选条件
+	 * @param params  筛选参数
+	 * @param orderby  排序
+	 * @return
+	 */
+	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults, String hqlWhere, Object[] params, LinkedHashMap<String, String> orderby);
+	
+	/**
+	 * 分页查询实体
+	 * @param entityClass 实体类
+	 * @param firstResult 第一条记录
+	 * @param maxResults 一页显示的记录数
+	 * @param orderby  排序
+	 * @return
+	 */
+	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults, LinkedHashMap<String, String> orderby);
+	
+	/**
+	 * 分页查询实体
+	 * @param entityClass 实体类
+	 * @param firstResult 第一条记录
+	 * @param maxResults 一页显示的记录数
+	 * @param hqlWhere 筛选条件
+	 * @param params  筛选参数
+	 * @return
+	 */
+	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults, String hqlWhere, Object[] params);
+	
+	/**
+	 * 分页查询实体
+	 * @param entityClass 实体类
+	 * @param firstResult 第一条记录
+	 * @param maxResults 一页显示的记录数
+	 * @return
+	 */
+	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults);
+	
+	/**
+	 * 查询所有实体
+	 * @param entityClass 实体类
+	 * @return
+	 */
+	public <T> PageInfo<T> findWithPage(Class<T> entityClass);
 }

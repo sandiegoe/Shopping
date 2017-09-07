@@ -1,5 +1,7 @@
 package com.arex.service.product.impl;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.annotation.Resource;
@@ -11,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.arex.bean.PageInfo;
 import com.arex.bean.product.ProductType;
 import com.arex.service.product.ProductTypeService;
 
@@ -45,6 +48,69 @@ public class ProductTypeServiceImplTest {
 		for (ProductType productType : productTypeList) {
 			System.out.println(productType);
 		}
+	}
+	
+	@Test
+	public void testFindWithPage() {
+		PageInfo<ProductType> pageInfo = productTypeService.findWithPage(ProductType.class, 0, 5);
+		for (ProductType productType : pageInfo.getEntityList()) {
+			System.out.println(productType);
+		}
+		System.out.println(pageInfo.getTotalResults());
+	}
+	
+	@Test
+	public void testFindWithPage2() {
+		LinkedHashMap<String, String> orderby = new LinkedHashMap<String, String>();
+		orderby.put("producttypeid", "desc");
+		PageInfo<ProductType> pageInfo = productTypeService.findWithPage(ProductType.class, 0, 5, orderby);
+		for (ProductType productType : pageInfo.getEntityList()) {
+			System.out.println(productType);
+		}
+		System.out.println(pageInfo.getTotalResults());
+	}
+	
+	@Test
+	public void testFindWithPage3() {
+		
+		LinkedHashMap<String, String> orderby = new LinkedHashMap<String, String>();
+		orderby.put("producttypeid", "desc");
+		String hqlWhere = " where 1=1 ";
+		List<Object> paramsList = new ArrayList<Object>();
+		hqlWhere += " and o.visible=? ";
+		paramsList.add(true);
+		Object[] params = paramsList.toArray();
+		
+		PageInfo<ProductType> pageInfo = productTypeService.findWithPage(ProductType.class, 0, 5, hqlWhere, params, orderby);
+		for (ProductType productType : pageInfo.getEntityList()) {
+			System.out.println(productType);
+		}
+		System.out.println(pageInfo.getTotalResults());
+	}
+	
+	@Test
+	public void testFindWithPage4() {
+		
+		String hqlWhere = " where 1=1 ";
+		List<Object> paramsList = new ArrayList<Object>();
+		hqlWhere += " and o.visible=? ";
+		paramsList.add(true);
+		Object[] params = paramsList.toArray();
+		
+		PageInfo<ProductType> pageInfo = productTypeService.findWithPage(ProductType.class, 0, 5, hqlWhere, params);
+		for (ProductType productType : pageInfo.getEntityList()) {
+			System.out.println(productType);
+		}
+		System.out.println(pageInfo.getTotalResults());
+	}
+	
+	@Test
+	public void testFindWithPage5() {
+		PageInfo<ProductType> pageInfo = productTypeService.findWithPage(ProductType.class);
+		for (ProductType productType : pageInfo.getEntityList()) {
+			System.out.println(productType);
+		}
+		System.out.println(pageInfo.getTotalResults());
 	}
 	
 	@Test

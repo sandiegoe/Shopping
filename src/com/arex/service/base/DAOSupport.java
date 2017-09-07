@@ -1,6 +1,7 @@
 package com.arex.service.base;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -9,6 +10,8 @@ import javax.persistence.Query;
 
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.arex.bean.PageInfo;
 
 @Transactional
 public abstract class DAOSupport implements DAO {
@@ -86,4 +89,64 @@ public abstract class DAOSupport implements DAO {
 		return entityList;
 	}
 
+	@Override
+	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults, LinkedHashMap<String, String> orderby) {
+		return this.findWithPage(entityClass, firstResult, maxResults, null, null, orderby);
+	}
+
+	@Override
+	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults, String hqlWhere, Object[] params) {
+		return this.findWithPage(entityClass, firstResult, maxResults, hqlWhere, params, null);
+	}
+
+	@Override
+	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults) {
+		return this.findWithPage(entityClass, firstResult, maxResults, null, null, null);
+	}
+
+	@Override
+	public <T> PageInfo<T> findWithPage(Class<T> entityClass) {
+		return this.findWithPage(entityClass, -1, -1);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults, String hqlWhere, Object[] params, LinkedHashMap<String, String> orderby) {
+		
+		PageInfo<T> pageInfo = new PageInfo<T>();
+		String entityClassName = entityClass.getSimpleName();
+		String orderStr = getOrderBy(orderby);
+		
+		Query query = em.createQuery("select o from " + entityClassName + " o " + (hqlWhere==null?"":hqlWhere) + orderStr);
+		this.setQueryWhereParams(query, params);
+		if (firstResult!=-1 && maxResults!=-1) {
+			query.setFirstResult(firstResult);
+			query.setMaxResults(maxResults);
+		}
+		pageInfo.setEntityList(query.getResultList());
+		query = em.createQuery("select count(o) from " + entityClassName + " o");
+		pageInfo.setTotalResults((long)query.getSingleResult());
+		
+		return pageInfo;
+	}
+	
+	protected void setQueryWhereParams(Query query, Object[] params) {
+		for (int i=0; params!=null && i<params.length; ++i) {
+			query.setParameter(i, params[i]);
+		}
+	}
+
+	protected String getOrderBy(LinkedHashMap<String, String> orderby) {
+		
+		StringBuffer buffer = new StringBuffer();
+		if (orderby != null && !orderby.isEmpty()) {
+			buffer.append(" order by ");
+			for (String key : orderby.keySet()) {
+				buffer.append("o.").append(key).append(" ").append(orderby.get(key)).append(",");
+			}
+			buffer.deleteCharAt(buffer.length()-1);
+		}
+		
+		return buffer.toString();
+	}
 }
