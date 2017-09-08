@@ -1,5 +1,6 @@
 package com.arex.service.base;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.arex.bean.PageInfo;
 
 @Transactional
-public abstract class DAOSupport implements DAO {
+public abstract class DAOSupport<T> implements DAO<T> {
 
 	@PersistenceContext
 	protected EntityManager em;
@@ -26,25 +27,27 @@ public abstract class DAOSupport implements DAO {
 	}
 
 	@Override
-	public <T> void delete(Class<T> entityClass, Object entityid) {
+	public void delete(Object entityid) {
+		Class<T> entityClass = this.getGenericClass();
 		em.remove(em.getReference(entityClass, entityid));
 	}
 
 	@Override
-	public <T> void delete(Class<T> entityClass, Object[] entityids) {
+	public void delete(Object[] entityids) {
 		for (Object entityid : entityids) {
-			this.delete(entityClass, entityid);
+			this.delete(entityid);
 		}
 	}
 	
 	@Override
-	public <T> void deleteBySetVisible(Class<T> entityClass, Object entityid) {
-		this.deleteBySetVisible(entityClass, new Object[]{entityid});
+	public void deleteBySetVisible(Object entityid) {
+		this.deleteBySetVisible(new Object[]{entityid});
 	}
 
 	@Override
-	public <T> void deleteBySetVisible(Class<T> entityClass, Object[] entityids) {
+	public void deleteBySetVisible(Object[] entityids) {
 		
+		Class<T> entityClass = this.getGenericClass();
 		String entityClassName = this.getEntityClassName(entityClass);
 		
 		String idName = entityClassName.toLowerCase() + "id";
@@ -73,7 +76,8 @@ public abstract class DAOSupport implements DAO {
 
 	@Transactional(readOnly=true, propagation=Propagation.NOT_SUPPORTED)
 	@Override
-	public <T> T find(Class<T> entityClass, Object entityid) {
+	public T find(Object entityid) {
+		Class<T> entityClass = this.getGenericClass();
 		T entity = em.find(entityClass, entityid);
 		
 		return entity;
@@ -81,39 +85,41 @@ public abstract class DAOSupport implements DAO {
 
 	@Transactional(readOnly=true, propagation=Propagation.NOT_SUPPORTED)
 	@Override
-	public <T> List<T> find(Class<T> entityClass, Object[] entityids) {
+	public List<T> find(Object[] entityids) {
+		
 		List<T> entityList = new ArrayList<T>();
 		for (Object entityid : entityids) {
-			T entity = this.find(entityClass, entityid);
+			T entity = this.find(entityid);
 			entityList.add(entity);
 		}
 		return entityList;
 	}
 
 	@Override
-	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults, LinkedHashMap<String, String> orderby) {
-		return this.findWithPage(entityClass, firstResult, maxResults, null, null, orderby);
+	public PageInfo<T> findWithPage(int firstResult, int maxResults, LinkedHashMap<String, String> orderby) {
+		return this.findWithPage(firstResult, maxResults, null, null, orderby);
 	}
 
 	@Override
-	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults, String hqlWhere, Object[] params) {
-		return this.findWithPage(entityClass, firstResult, maxResults, hqlWhere, params, null);
+	public PageInfo<T> findWithPage(int firstResult, int maxResults, String hqlWhere, Object[] params) {
+		return this.findWithPage(firstResult, maxResults, hqlWhere, params, null);
 	}
 
 	@Override
-	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults) {
-		return this.findWithPage(entityClass, firstResult, maxResults, null, null, null);
+	public PageInfo<T> findWithPage(int firstResult, int maxResults) {
+		return this.findWithPage(firstResult, maxResults, null, null, null);
 	}
 
 	@Override
-	public <T> PageInfo<T> findWithPage(Class<T> entityClass) {
-		return this.findWithPage(entityClass, -1, -1);
+	public PageInfo<T> findWithPage() {
+		return this.findWithPage(-1, -1);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> PageInfo<T> findWithPage(Class<T> entityClass, int firstResult, int maxResults, String hqlWhere, Object[] params, LinkedHashMap<String, String> orderby) {
+	public PageInfo<T> findWithPage(int firstResult, int maxResults, String hqlWhere, Object[] params, LinkedHashMap<String, String> orderby) {
 		
+		Class<T> entityClass = this.getGenericClass();
 		PageInfo<T> pageInfo = new PageInfo<T>();
 		String entityClassName = getEntityClassName(entityClass);
 		String orderStr = getOrderBy(orderby);
@@ -131,7 +137,16 @@ public abstract class DAOSupport implements DAO {
 		return pageInfo;
 	}
 	
-	protected <T> String getEntityClassName(Class<T> entityClass) {
+	private Class<T> getGenericClass() {
+		
+		ParameterizedType type = (ParameterizedType)this.getClass().getGenericSuperclass();
+		Class<T> clazz = (Class<T>)type.getActualTypeArguments()[0];
+		
+		return clazz;
+	}
+	
+	private String getEntityClassName(Class<T> entityClass) {
+		
 		String entityClassName = entityClass.getSimpleName();
 		Entity entity = entityClass.getAnnotation(Entity.class);
 		if (entity.name() !=null && !"".equals(entity.name())) {
@@ -141,13 +156,13 @@ public abstract class DAOSupport implements DAO {
 		return entityClassName;
 	}
 	
-	protected void setQueryWhereParams(Query query, Object[] params) {
+	private void setQueryWhereParams(Query query, Object[] params) {
 		for (int i=0; params!=null && i<params.length; ++i) {
 			query.setParameter(i, params[i]);
 		}
 	}
 
-	protected String getOrderBy(LinkedHashMap<String, String> orderby) {
+	private String getOrderBy(LinkedHashMap<String, String> orderby) {
 		
 		StringBuffer buffer = new StringBuffer();
 		if (orderby != null && !orderby.isEmpty()) {
